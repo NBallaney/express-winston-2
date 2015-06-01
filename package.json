@@ -4,7 +4,7 @@
     "email": "nballaney@gmail.com"
   },
   "name": "express-winston-2",
-  "description": "express.js middleware for flatiron/winston",
+  "description": "Express.js middleware for flatiron/winston. Credits to express-winston",
   "keywords": [
     "winston",
     "flatiron",

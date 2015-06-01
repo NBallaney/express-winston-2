@@ -1,44 +1,53 @@
-# express-winston
-[![Build Status](https://secure.travis-ci.org/bithavoc/express-winston.png)](http://travis-ci.org/bithavoc/express-winston)
+# express-winston-2
+[![Build Status](https://secure.travis-ci.org/nballaney/express-winston-2.png)](http://travis-ci.org/nballaney/express-winston-2)
 
 > [winston](https://github.com/flatiron/winston) middleware for express.js
 
 ## Installation
 
-    npm install express-winston
+    npm install express-winston-2
 
 ## Usage
 
-express-winston provides middlewares for request and error logging of your express.js application.  It uses 'whitelists' to select properties from the request and (new in 0.2.x) response objects.
+express-winston-2 provides middleware for request and error logging of your express.js application.  It uses 'whitelists' to select properties from the request and (new in 0.2.x) response objects.
 
-To make use of express-winston, you need to add the following to your application:
+To make use of express-winston-2, you need to add the following to your application:
 
 In `server.js` (or wherever you need it):
 
 ```
 var winston = require('winston'),
-    expressWinston = require('express-winston');
+    expressWinston = require('express-winston-2');
 ```
 
-### Error Logging
+### Logging errors to a file
 
-Use `expressWinston.errorLogger(options)` to create a middleware that log the errors of the pipeline.
+- Logs all responses to the console
+- Logs errors to 'errors.log'. In this case, we classify any response with a status code greater than 400 as an error.
 
 ``` js
-    var router = require('./my-express-router');
+function getWinstonConfig() {
+    return expressWinston.logger({
+        transports: [
+            new (winston.transports.Console)(),
+            new (winston.transports.File)({
+                filename: './errors.log',
+                // File will only record errors
+                level: 'error'
+            })
+        ],
+        getLogLevel: function(statusCode) {
+            if(statusCode >= 400) {
+                return "error"
+            }
+            return "info";
+        }
+    });
+}
 
-    app.use(router); // notice how the router goes first.
-    app.use(expressWinston.errorLogger({
-      transports: [
-        new winston.transports.Console({
-          json: true,
-          colorize: true
-        })
-      ]
-    }));
 ```
 
-The logger needs to be added AFTER the express router(`app.router)`) and BEFORE any of your custom error handlers(`express.handler`). Since express-winston will just log the errors and not __handle__ them, you can still use your custom error handler like `express.handler`, just be sure to put the logger before any of your handlers.
+The logger needs to be added AFTER the express router(`app.router)`) and BEFORE any of your custom error handlers(`express.handler`). Since express-winston-2 will just log the errors and not __handle__ them, you can still use your custom error handler like `express.handler`, just be sure to put the logger before any of your handlers.
 
 ### Options
 
@@ -82,7 +91,7 @@ Use `expressWinston.logger(options)` to create a middleware to log your HTTP req
 
 ``` js
     var express = require('express');
-    var expressWinston = require('express-winston');
+    var expressWinston = require('express-winston-2');
     var winston = require('winston'); // for transports.Console
     var app = module.exports = express();
 
@@ -92,7 +101,7 @@ Use `expressWinston.logger(options)` to create a middleware to log your HTTP req
     // Let's make our express `Router` first.
     var router = express.Router();
     router.get('/error', function(req, res, next) {
-      // here we cause an error in the pipeline so we see express-winston in action.
+      // here we cause an error in the pipeline so we see express-winston-2 in action.
       return next(new Error("This is an error and it should be logged to the console"));
     });
 
@@ -101,7 +110,7 @@ Use `expressWinston.logger(options)` to create a middleware to log your HTTP req
       res.end();
     });
 
-    // express-winston logger makes sense BEFORE the router.
+    // express-winston-2 logger makes sense BEFORE the router.
     app.use(expressWinston.logger({
       transports: [
         new winston.transports.Console({
@@ -114,7 +123,7 @@ Use `expressWinston.logger(options)` to create a middleware to log your HTTP req
     // Now we can tell the app to use our routing code:
     app.use(router);
 
-    // express-winston errorLogger makes sense AFTER the router.
+    // express-winston-2 errorLogger makes sense AFTER the router.
     app.use(expressWinston.errorLogger({
       transports: [
         new winston.transports.Console({
@@ -131,7 +140,7 @@ Use `expressWinston.logger(options)` to create a middleware to log your HTTP req
     }));
 
     app.listen(3000, function(){
-      console.log("express-winston demo listening on port %d in %s mode", this.address().port, app.settings.env);
+      console.log("express-winston-2 demo listening on port %d in %s mode", this.address().port, app.settings.env);
     });
 ```
 
@@ -163,7 +172,7 @@ Browse `/` to see a regular HTTP logging like this:
       "message": "HTTP GET /favicon.ico"
     }
 
-Browse `/error` will show you how express-winston handles and logs the errors in the express pipeline like this:
+Browse `/error` will show you how express-winston-2 handles and logs the errors in the express pipeline like this:
 
     {
       "date": "Thu Jul 19 2012 23:39:44 GMT-0500 (COT)",
@@ -212,8 +221,8 @@ Browse `/error` will show you how express-winston handles and logs the errors in
         "    at Router._dispatch (/Users/thepumpkin/Projects/testExpressWinston/node_modules/express/lib/router/index.js:280:4)",
         "    at Object.handle (/Users/thepumpkin/Projects/testExpressWinston/node_modules/express/lib/router/index.js:45:10)",
         "    at next (/Users/thepumpkin/Projects/testExpressWinston/node_modules/express/node_modules/connect/lib/http.js:204:15)",
-        "    at done (/Users/thepumpkin/Dropbox/Projects/express-winston/index.js:91:14)",
-        "    at /Users/thepumpkin/Dropbox/Projects/express-winston/node_modules/async/lib/async.js:94:25",
+        "    at done (/Users/thepumpkin/Dropbox/Projects/express-winston-2/index.js:91:14)",
+        "    at /Users/thepumpkin/Dropbox/Projects/express-winston-2/node_modules/async/lib/async.js:94:25",
         "    at [object Object].log (/Users/thepumpkin/Projects/testExpressWinston/node_modules/winston/lib/winston/transports/console.js:87:3)"
       ],
       "req": {
@@ -270,7 +279,7 @@ Note that you can log the whole request and/or response body:
 
 ## Route-Specific Whitelists and Blacklists
 
-New in version 0.2.x is the ability to add whitelist elements in a route.  express-winston adds a `_routeWhitelists` object to the `req`uest, containing `.body`, `.req` and .res` properties, to which you can set an array of 'whitelist' parameters to include in the log, specific to the route in question:
+New in version 0.2.x is the ability to add whitelist elements in a route.  express-winston-2 adds a `_routeWhitelists` object to the `req`uest, containing `.body`, `.req` and .res` properties, to which you can set an array of 'whitelist' parameters to include in the log, specific to the route in question:
 
 ``` js
     router.post('/user/register', function(req, res, next) {
@@ -343,7 +352,7 @@ Generate the `coverage.html` coverage report:
 
 ## Issues and Collaboration
 
-If you ran into any problems, please use the project [Issues section](https://github.com/bithavoc/express-winston/issues) to search or post any bug.
+If you ran into any problems, please use the project [Issues section](https://github.com/nballaney/express-winston-2/issues) to search or post any bug.
 
 ## Contributors
 
@@ -353,9 +362,6 @@ If you ran into any problems, please use the project [Issues section](https://gi
 
 Also see AUTHORS file, add yourself if you are missing.
 
-## MIT License
-
-Copyright (c) 2012-2014 Bithavoc.io and Contributors - http://bithavoc.io
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
